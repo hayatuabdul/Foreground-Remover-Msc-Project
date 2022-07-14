@@ -70,44 +70,6 @@ def newDepth(path):
 
     return depth2
        
-
-def loadDepthMap2(path):
-        """
-        Read a depth-map
-        :param filename: file name to load
-        :return: image data of depth image
-        """
-
-        depth = open(path, "rb")
-        if len(depth.shape) == 3:
-            depth = depth[:, :, 0] * 1000.
-        elif len(depth.shape) == 2:
-            depth *= 1000.
-        else:
-            raise IOError("Invalid file: {}".format(filename))
-        depth[depth > 1000. - 1e-4] = 32001
-        
-        return depth 
-    
-def loadDepthMap(path):
-        """
-        Read a depth-map
-        :param filename: file name to load
-        :return: image data of depth image
-        """
-
-        img = Image.open(path)
-        # top 8 bits of depth are packed into green channel and lower 8 bits into blue
-        assert len(img.getbands()) == 3
-        r, g, b = img.split()
-        r = np.asarray(r, np.int32)
-        g = np.asarray(g, np.int32)
-        b = np.asarray(b, np.int32)
-        dpt = np.bitwise_or(np.left_shift(g, 8), b)
-        imgdata = np.asarray(dpt, np.float32)
-
-        return imgdata 
-    
     
 focalX = 1.52973780e+03
 focalY = 1.00800000e+03
