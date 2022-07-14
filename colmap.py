@@ -12,7 +12,7 @@ import open3d as o3d
 
 from read_write_model import read_model, read_next_bytes, read_cameras_text, read_cameras_binary, read_array, write_array
 
-from GUI import run, myClick
+from GUI import run, myClick7
 
 
 # Read and manipulate depth data obtained from Colmap. The depth data can then be converted to a 3d point cloud visualized in open3d
@@ -270,7 +270,7 @@ def main():
     #custom_draw_geometry_with_rotation(pcd_plot2, -90)
     
     # Execute the Graphical User Interface
-    run(fx, fy, cx, cy, pcd_plot2, pic1, pic2, pic3, pic4, pic5, pic6)
+    run(fx, fy, cx, cy, pcd_plot2, pic1, pic2, pic3, pic4, pic5, pic6, img4, depth_map, Depth)
     #write_array(depth_map, 'maps/depth2.pgm')
 
 
