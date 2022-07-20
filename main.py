@@ -4,6 +4,9 @@ from tkinter import *
 from tkinter import filedialog
 from PIL import ImageTk, Image
 import cv2
+import os
+from os.path import splitext
+import ntpath
 import collections
 import struct
 import numpy as np
@@ -37,32 +40,8 @@ l2.grid(row=0, column=1)
 L2 = Label(my_frame, text="Depth Image Required",height="28",width="80",bd=0.5, relief="sunken")
 L2.grid(row=1, column=1)
 
-
-# Manually select depth map
-def depth_map():
-    global tkimage
-    global depth_map
-    global dp_img
-    global img_rgb
-    global depthselect
+ 
     
-    # Open directory and find depth files
-    depthselect = filedialog.askopenfilename(initialdir = "Desktop", filetypes = [('Depth Files', '*.bin')])
-    depth_map = read_array(depthselect)
-    dp_img = Image.fromarray(depth_map)
-    dp_img = dp_img.convert('RGB')
-    dp_img.save("depth_img.png")
-    img = Image.open("depth_img.png")
-    img.thumbnail((560, 490))
-    tkimage = ImageTk.PhotoImage(img)
-    
-    L2 = Label(my_frame) 
-    L2.config(image = tkimage)
-    L2.grid(row=1, column=1)
-    
-    
-
-
 # Manually select RGB image
 def rgb_img():
     global tkimage2
@@ -78,8 +57,42 @@ def rgb_img():
     L1.config(image = tkimage2)
     L1.grid(row=1, column=0)
 
+# Automatically load depth map
+def depth_map():
+    global tkimage
+    global depth_map
+    global dp_img
+    global img_rgb
+    global depthselect
+    global imgselect
     
-# Obtain camera intrinsics for the images
+    # Find depth map corresponding to RGB image selected
+    direc = ('Reconstruction/dense/0/stereo/depth_maps')
+    base=os.path.basename(imgselect)
+    
+    dp_name = base + '.geometric.bin'
+    #print(dp_name)
+    #print(os.path.splitext(imgselect)[0])
+    
+    # Merge string with directory and depth name
+    dps = str(direc)
+    fullpath = dps + "/" + dp_name
+    #print(fullpath)
+
+    depth_map = read_array(fullpath)
+    dp_img = Image.fromarray(depth_map)
+    dp_img = dp_img.convert('RGB')
+    dp_img.save("depth_img.png")
+    img = Image.open("depth_img.png")
+    img.thumbnail((560, 490))
+    tkimage = ImageTk.PhotoImage(img)
+    
+    L2 = Label(my_frame) 
+    L2.config(image = tkimage)
+    L2.grid(row=1, column=1)
+    
+    
+# Obtain camera intrinsics for the images    
 def camera_intrinsic(camera):
     global fx, fy, cx, cy
     fx = float(((str(camera[0]).lstrip('[').rstrip(']'))))
@@ -178,12 +191,12 @@ def target4():
 
 
 
-B1 = Button(tk, text = "Choose RGB Image", padx=20, pady=15, command=target1, relief="solid")
+B1 = Button(tk, text = "Choose Color Image", padx=20, pady=15, command=target1, relief="solid")
 B1.config(cursor="hand2")
 B1.place(x=256,y=540)
 
 # Fixed depth map selection by removing the thread
-B2 = Button(tk, text = "Choose Depth", padx=20, pady=15, command=depth_map, relief="solid")
+B2 = Button(tk, text = "Load Depth Image", padx=20, pady=15, command=depth_map, relief="solid")
 B2.config(cursor="hand2")
 B2.place(x=850,y=540)
 
