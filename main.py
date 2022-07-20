@@ -59,6 +59,8 @@ def depth_map():
     L2 = Label(my_frame) 
     L2.config(image = tkimage)
     L2.grid(row=1, column=1)
+    
+    
 
 
 # Manually select RGB image
@@ -180,7 +182,8 @@ B1 = Button(tk, text = "Choose RGB Image", padx=20, pady=15, command=target1, re
 B1.config(cursor="hand2")
 B1.place(x=256,y=540)
 
-B2 = Button(tk, text = "Choose Depth", padx=20, pady=15, command=target2, relief="solid")
+# Fixed depth map selection by removing the thread
+B2 = Button(tk, text = "Choose Depth", padx=20, pady=15, command=depth_map, relief="solid")
 B2.config(cursor="hand2")
 B2.place(x=850,y=540)
 
