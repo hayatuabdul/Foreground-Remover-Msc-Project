@@ -41,9 +41,9 @@ def camera_intrinsic(camera):
     return fx, fy, cx, cy
 
 
-def convert_img(path, depth_map):
+def convert_img(depth_map):
     
-    rgb = Image.open(path)
+    rgb = Image.open('images/2.jpeg')
     rgb2 = np.asarray(rgb)
     dp_size = depth_map.shape
     if rgb2.size != depth_map.size:
@@ -58,6 +58,17 @@ def convert_img(path, depth_map):
     
     return img4, rgb
 
+def get_depth():
+    depth_list = []
+    depth_map = read_array('Reconstruction/dense/0/stereo/depth_maps/2.jpeg.geometric.bin', ext = ".bin")
+    
+    return depth_map
+    #depth_maps = read_array('Reconstruction/dense/0/stereo/depth_maps/', ext =  ".bin")
+    #for x in depth_maps:
+        #dps = depth_maps
+        #depth_list.append(dps)
+    #depth_map = read_array('Reconstruction/dense/0/stereo/depth_maps/num.jpeg.geometric.bin', ext = ".bin")
+    
 def convert_depth(depth_map):
     
     dp =cv2.resize(depth_map,(2052,1537))
@@ -67,7 +78,7 @@ def convert_depth(depth_map):
     dp_img = dp_img.convert('RGB')
 
     return dp
-   
+    
 def newDepth(path):
 
     depth = path
@@ -208,16 +219,10 @@ def custom_draw_geometry_with_rotation(pcd, fov_step):
     
 def main():
     
-    # Read depth and normal maps corresponding to the same image.
-    if not os.path.exists('maps/depth_maps/'):
-        raise FileNotFoundError("File not found: {}".format('maps/depth_maps/0.jpeg.geometric'))
-
-    if not os.path.exists('maps/normal_maps'):
-        raise FileNotFoundError("File not found: {}".format('maps/depth_maps/0.jpeg.geometric'))
-
-    depth_map = read_array('Reconstruction/dense/0/stereo/depth_maps/2.jpeg.geometric.bin', ext = ".bin")
+     # Acquire Depth images
      # Resize RGB image to match the depth size for 3D color matching
-    img4, rgb = convert_img('images/2.jpeg', depth_map)
+    depth_map = get_depth()
+    img4, rgb = convert_img(depth_map)
     
     #normal_map = read_array('maps/normal_maps/0.jpeg.geometric.bin', ext = ".bin")
     #min_depth, max_depth = np.percentile(depth_map, [5, 95])
