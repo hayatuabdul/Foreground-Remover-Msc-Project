@@ -26,7 +26,7 @@ windowWidth = tk.winfo_reqwidth()
 windowHeight = tk.winfo_reqheight()
 positionRight = int(tk.winfo_screenwidth()/5 - windowWidth/5)
 positionDown = int(tk.winfo_screenheight()/5 - windowHeight/2)
-tk.geometry(f"1500x650+{positionRight}+{positionDown}")
+tk.geometry(f"1550x650+{positionRight}+{positionDown}")
 
 # Initialize frame
 my_frame = Frame(tk)
@@ -39,8 +39,14 @@ l2 = Label(my_frame, text="Depth Image", font="italic")
 l2.grid(row=0, column=1)
 L2 = Label(my_frame, text="Depth Image Required",height="28",width="80",bd=0.5, relief="sunken")
 L2.grid(row=1, column=1)
+sl = Label(my_frame)
+sl.grid(row=1,column=2, sticky=W, padx="200")
+sl2 = Label(my_frame, text="Manipulate Depth", font="bold")
+#sl2.grid(row=1,column=2, sticky=W, padx="200")
+sl2.place(x=1254,y=210)
 
- 
+# Value for slider button
+value = IntVar() 
     
 # Manually select RGB image
 def rgb_img():
@@ -49,6 +55,9 @@ def rgb_img():
     global imgselect
     
     imgselect = filedialog.askopenfilename(initialdir = "Desktop", filetypes = [('Image files', '*.jpeg'),('Image files', '*.jpg')])
+    if not imgselect:
+        return 0
+    
     img2 = Image.open(imgselect)
     img2.thumbnail((560, 490))
     tkimage2 = ImageTk.PhotoImage(img2)
@@ -56,6 +65,7 @@ def rgb_img():
     L1 = Label(my_frame)
     L1.config(image = tkimage2)
     L1.grid(row=1, column=0)
+    
 
 # Automatically load depth map
 def depth_map():
@@ -68,7 +78,7 @@ def depth_map():
     
     # Find depth map corresponding to RGB image selected
     direc = ('Reconstruction/dense/0/stereo/depth_maps')
-    base=os.path.basename(imgselect)
+    base = os.path.basename(imgselect)
     
     dp_name = base + '.geometric.bin'
     #print(dp_name)
@@ -91,15 +101,75 @@ def depth_map():
     L2.config(image = tkimage)
     L2.grid(row=1, column=1)
     
+# Update depth value when slider gets released
+def updateValue(event):
+    global depth
     
+    sd = sl.get()
+    if sd > 0 and sd < 10:
+        depth = 1
+    elif sd >= 10 and sd  < 20:
+        depth = 2
+    elif sd >= 20 and sd < 30:
+        depth = 3
+    elif sd >= 30 and sd < 40:
+        depth = 4
+    elif sd >= 40 and sd < 50:
+        depth = 5
+    elif sd >= 50 and sd < 60:
+        depth = 6
+    elif sd >= 60 and sd < 70:
+        depth = 7
+    elif sd >= 70 and sd < 80:
+        depth = 8
+    elif sd >= 80 and sd < 90:
+        depth = 9
+    elif sd >= 90 and sd <= 100:
+        depth = 10
+    elif sd >= 110 and sd  < 120:
+        depth = 11
+    elif sd >= 120 and sd < 130:
+        depth = 12
+    elif sd >= 130 and sd < 140:
+        depth = 13
+    elif sd >= 140 and sd < 150:
+        depth = 14
+    elif sd >= 150 and sd < 160:
+        depth = 15
+    elif sd >= 160 and sd < 170:
+        depth = 16
+    elif sd >= 170 and sd < 180:
+        depth = 17
+    elif sd >= 180 and sd < 190:
+        depth = 18
+    elif sd >= 180 and sd < 190:
+        depth = 19
+    elif sd >= 190 and sd <= 200:
+        depth = 20
+    else:
+        depth = 0
+    print("Maipulated Depth:", depth)
+
+    
+# Create slider for depth manipulation    
+def slider():
+    global sl
+
+    sl = Scale(my_frame, length=230,variable = value, from_ = 0, to = 200, troughcolor="purple", orient = HORIZONTAL)
+    #sl.grid(row=1,column=2)
+    sl.place(x=1200,y=235)
+    sl.bind("<ButtonRelease-1>", updateValue)
+
 # Obtain camera intrinsics for the images    
 def camera_intrinsic(camera):
-    global fx, fy, cx, cy
+    global fx, fy, cx, cy, depth
+    depth = 0
     fx = float(((str(camera[0]).lstrip('[').rstrip(']'))))
     fy = float(((str(camera[1]).lstrip('[').rstrip(']'))))
     cx = float(((str(camera[2]).lstrip('[').rstrip(']'))))
     cy = float(((str(camera[3]).lstrip('[').rstrip(']'))))
     print('Camera Intrinsics:', fx,fy,cx,cy)
+    
     return fx, fy, cx, cy
 
 # Convert RGB images to match depth size if necessary
@@ -127,22 +197,23 @@ def convert():
 # Generate and visualize a 3D point cloud of the environment from the image perspective   
 def point_cloud():
     global depth_map
+    global depth
     global img4
     global rgb
     global fx, fy, cx, cy
     
 
-    depth = depth_map
+    depthz = depth_map
     points = []
     colors = []
     srcPxs = []
     
-    for v in range(depth.shape[0]):
-        for u in range(depth.shape[1]):
+    for v in range(depthz.shape[0]):
+        for u in range(depthz.shape[1]):
             
-            Z = depth[v, u] 
+            Z = depthz[v, u] 
             
-            if (Z > 0):
+            if (Z > depth):
                 X = (u - cx) * Z / fx
                 Y = (v - cy) * Z / fy
                 srcPxs.append((u, v))
@@ -181,7 +252,7 @@ def point_cloud():
 def target1():
     threading.Thread(target=rgb_img).start()
 def target2():
-    threading.Thread(target=depth_map).start()
+    threading.Thread(target=slider).start()
 def target3():
     threading.Thread(target=convert).start()
     camera_bin = read_cameras_binary('Reconstruction/sparse/0/cameras.bin')
@@ -198,7 +269,7 @@ B1.place(x=256,y=540)
 # Fixed depth map selection by removing the thread
 B2 = Button(tk, text = "Load Depth Image", padx=20, pady=15, command=depth_map, relief="solid")
 B2.config(cursor="hand2")
-B2.place(x=850,y=540)
+B2.place(x=840,y=540)
 
 B3 = Button(tk, text = "Calibrate", padx=57, pady=45, command=target3, relief="solid")
 B3.config(cursor="hand2")
@@ -207,6 +278,10 @@ B3.place(x=1255,y=70)
 B4 = Button(tk, text = "Visualize", padx=60, pady=50, command=target4, relief="solid")
 B4.config(cursor="hand2")
 B4.place(x=1255,y=380)
+
+B5 = Button(tk, text = "Activate Slider", padx=50, pady=30, command=target2, relief="solid")
+B5.config(cursor="hand2")
+B5.place(x=1251,y=530)
 
 
 tk.mainloop()
