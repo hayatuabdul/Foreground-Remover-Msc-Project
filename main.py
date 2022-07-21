@@ -102,60 +102,28 @@ def depth_map():
     L2.grid(row=1, column=1)
     
 # Update depth value when slider gets released
+# Function got automated removing multiple if statements in the process
 def updateValue(event):
     global depth
     
     sd = sl.get()
-    if sd > 0 and sd < 10:
-        depth = 1
-    elif sd >= 10 and sd  < 20:
-        depth = 2
-    elif sd >= 20 and sd < 30:
-        depth = 3
-    elif sd >= 30 and sd < 40:
-        depth = 4
-    elif sd >= 40 and sd < 50:
-        depth = 5
-    elif sd >= 50 and sd < 60:
-        depth = 6
-    elif sd >= 60 and sd < 70:
-        depth = 7
-    elif sd >= 70 and sd < 80:
-        depth = 8
-    elif sd >= 80 and sd < 90:
-        depth = 9
-    elif sd >= 90 and sd <= 100:
-        depth = 10
-    elif sd >= 110 and sd  < 120:
-        depth = 11
-    elif sd >= 120 and sd < 130:
-        depth = 12
-    elif sd >= 130 and sd < 140:
-        depth = 13
-    elif sd >= 140 and sd < 150:
-        depth = 14
-    elif sd >= 150 and sd < 160:
-        depth = 15
-    elif sd >= 160 and sd < 170:
-        depth = 16
-    elif sd >= 170 and sd < 180:
-        depth = 17
-    elif sd >= 180 and sd < 190:
-        depth = 18
-    elif sd >= 180 and sd < 190:
-        depth = 19
-    elif sd >= 190 and sd <= 200:
-        depth = 20
+    
+    if sd >= 1:
+        depth = sd/50
+        print("Maipulated Depth:", depth)
+        return depth
     else:
         depth = 0
-    print("Maipulated Depth:", depth)
 
-    
+        return depth
+
+
+        
 # Create slider for depth manipulation    
 def slider():
     global sl
 
-    sl = Scale(my_frame, length=230,variable = value, from_ = 0, to = 200, troughcolor="purple", orient = HORIZONTAL)
+    sl = Scale(my_frame, length=230,variable = value, from_ = 0, to = 1000, troughcolor="purple", orient = HORIZONTAL)
     #sl.grid(row=1,column=2)
     sl.place(x=1200,y=235)
     sl.bind("<ButtonRelease-1>", updateValue)
