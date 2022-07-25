@@ -207,7 +207,7 @@ def read_cameras_binary(path_to_model_file):
                                         height=height,
                                         params=np.array(params))
         assert len(cameras) == num_cameras
-    return params
+    return params, cameras
 
 
 def write_cameras_text(cameras, path):
