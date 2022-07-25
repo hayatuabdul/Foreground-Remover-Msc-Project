@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import open3d as o3d
 
-from read_write_model import read_model, read_next_bytes, read_cameras_text, read_cameras_binary, read_array, write_array
+from read_write_model import read_model, read_next_bytes, read_cameras_text, read_cameras_binary, read_array, write_array, read_cameras_binary, read_images_binary
 
 # Initialize TKinter
 tk = Tk()
@@ -218,12 +218,19 @@ def point_cloud():
     
 # Use threads to respond to button clicks    
 def target1():
+    global img_bin
+    global camera_bin2
     threading.Thread(target=rgb_img).start()
+    img_bin = read_images_binary('Reconstruction/sparse/0/images.bin')
+    camera_bin, camera_bin2 = read_cameras_binary('Reconstruction/sparse/0/cameras.bin')
+    #qvec2rotmat()
 def target2():
     threading.Thread(target=slider).start()
 def target3():
+    global camera_bin
+    global camera_bin2
     threading.Thread(target=convert).start()
-    camera_bin = read_cameras_binary('Reconstruction/sparse/0/cameras.bin')
+    camera_bin, camera_bin2 = read_cameras_binary('Reconstruction/sparse/0/cameras.bin')
     threading.Thread(target=lambda:camera_intrinsic(camera_bin)).start()
 def target4():
     threading.Thread(target=point_cloud).start()
