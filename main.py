@@ -14,6 +14,7 @@ import numpy as np
 import threading
 import matplotlib.pyplot as plt
 import open3d as o3d
+from plyfile import PlyData, PlyElement
 
 from read_write_model import read_model, read_next_bytes, read_cameras_text, read_cameras_binary, read_images_binary, read_array, write_array, qvec2rotmat
 
@@ -82,18 +83,40 @@ def depth_map():
     
     # Find depth map corresponding to RGB image selected
     direc = ('Reconstruction/dense/0/stereo/depth_maps')
+    direc2 = ('midas/output')
     base = os.path.basename(imgselect)
     
+    #dep_mono = Image.open('midas/output/10.png')
+    #dep_mono2 = np.asarray(dep_mono)
+    #print("Dep Mono:", dep_mono2)
+    
     dp_name = base + '.geometric.bin'
+    
     #print(dp_name)
-    #print(os.path.splitext(imgselect)[0])
+    base2 = (os.path.splitext(imgselect)[0])
+    base3 = os.path.basename(base2)
+    dp_name2 = base3 + '.png'
+    depth_res = Image.open('HighResDepth/Aldep/12_r.png')
+    #print(dp_name2)
     
     # Merge string with directory and depth name
     dps = str(direc)
     fullpath = dps + "/" + dp_name
     #print(fullpath)
+    dps2 = str(direc2)
+    fullpath2 = dps2 + "/" + dp_name2
+    #print(fullpath2)
+    
+    #fullpath3 = Image.open(fullpath2)
+    #dep_mono = np.asarray(fullpath3)
+    dep_high_res = np.asarray(depth_res)
+    
+    
+    dep_mong = np.load("depthmon.npy")
+    
 
     depth_map = read_array(fullpath)
+    #depth_map = dep_high_res
     dp_img = Image.fromarray(depth_map)
     dp_img = dp_img.convert('RGB')
     dp_img.save("depth_img.png")
@@ -115,6 +138,7 @@ def updateValue(event):
     
     if sd >= 1:
         depth = sd/50
+        #depth = sd/0.01
         print("Maipulated Depth:", depth)
         return depth
     else:
@@ -175,46 +199,73 @@ def point_cloud():
     global img4
     global rgb
     global fx, fy, cx, cy
+    global pcd
+    global colors
     
 
     depthz = depth_map
-    points = []
+    rgb3 = np.asarray(rgb)
+    #rgb3 = np.asarray(rgb)
+    #points = []
     colors = []
+
+# This function predefines the formula and computes the pixels faster due to pre processing
+    centeru = depthz.shape[1] / 2
+    centerv = depthz.shape[0] / 2
+    height = depthz.shape[0]
+    width = depthz.shape[1]
     
-    for v in range(depthz.shape[0]):
-        for u in range(depthz.shape[1]):
-            
-            Z = depthz[v, u] 
-            
-            if (Z > depth):
-                X = (u - cx) * Z / fx
-                Y = (v - cy) * Z / fy
-                points.append((X, Y, Z))
-                colors.append(rgb.getpixel((u, v)))
-            else:
-                pass
+    row = np.arange(0, width, 1)
+    u = np.array([row for i in np.arange(height)])
+    col = np.arange(0, height, 1)
+    v = np.array([col for i in np.arange(width)])
+    v = v.transpose(1, 0)
+    #color.append(rgb.getpixel((u, v)))
+    
+    for i in np.arange(height):
+        for j in np.arange(width):
+            colors.append(rgb.getpixel((j, i)))
             
 
-    points = np.asarray(points)
+    #colors = np.hstack((rgb3))
+    
+
+    #cox = colors[1:8 ,0:1]
+    #coy = colors[: ,1:2]
+    #coz = colors[: ,2:3]
+    
+    #print('RGB color:', cox)
+    print(u)
+    x = (u - centeru) * depthz / fx
+    y = (v - centerv) * depthz / fy
+    z = depthz
+    #u = np.int
+    print(u)
+    print(v)
+    
+    
+    #colors = colors[0:3]
+    
+    x = np.reshape(x, (width * height, 1)).astype(float)
+    y = np.reshape(y, (width * height, 1)).astype(float)
+    z = np.reshape(z, (width * height, 1)).astype(float)
+    #colors = np.reshape(colors, (width * height, 1)).astype(np.float)
+    points = np.concatenate((x, y, z), axis=1)
+    points =  np.asarray(points)
+
+    #points = np.asarray(points)
     colors = np.asarray(colors)
+    print('Colors Size:', len(colors))
+    print('Point Size:', len(points))
 
+    
     pcd = o3d.geometry.PointCloud()
+
     pcd.points = o3d.utility.Vector3dVector(points)
     pcd.colors = o3d.utility.Vector3dVector(colors/255)
     pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-    vis = o3d.visualization.Visualizer()
-    vis.create_window()
-    vis.add_geometry(pcd)
-    view_pcd = vis.get_view_control()
-    #view_pcd.set_front((0.1, 0.8, 1.3))
-    view_pcd.set_front((-0.15, 1.3, 2.2))
-    view_pcd.set_up((0, 1, 0))
-    view_pcd.set_zoom(0.45)
+    o3d.visualization.draw_geometries([pcd])
     
-    #view_pcd.change_field_of_view(step = fov_step)
-    vis.run()
-    vis.destroy_window() 
-        
     
 # Generate and visualize Dense model outputted by Colmap. Also access and manipulate depth pixels         
 def ply_cloud():
@@ -230,9 +281,10 @@ def ply_cloud():
     ply_file = ('Reconstruction/dense/0/fused.ply')
     
 
-    #images = img_bin
+    images = img_bin
     #cameras = camera_bin2
-    #im1 = images[3]
+    im1 = images[13]
+    print(im1.qvec)
     #print(im1)
     #cam1 = cameras[1]
     #print(cam1)
@@ -309,6 +361,7 @@ def ply_cloud():
             pass
             
     points = np.asarray(points)
+    #print('Ply Color:', colors)
     colors = np.asarray(colors)
     #points2v = points[:, 0:3]
     #points3 = np.asarray(points3)
@@ -331,6 +384,7 @@ def ply_cloud():
     #view_pcd.set_up((0, 1, 0))
     #view_pcd.set_zoom(0.45)
     
+    
     #view_pcd.change_field_of_view(step = fov_step)
     #vis.run()
     #vis.destroy_window() 
@@ -344,8 +398,57 @@ def ply_cloud():
     #point_cloud_in_numpy = np.asarray(pcd2.points) 
     #colors_cloud_in_numpy = np.asarray(pcd2.colors) 
 
+def point_cloud2():
+    global depth_map
+    global depth
+    global img4
+    global rgb
+    global fx, fy, cx, cy
+    global color
+    
 
+    depthz = depth_map
+    points = []
+    colors = []
+    
+    rgb3 = np.asarray(rgb)
+    points = []
+    
+    colors = np.hstack((rgb3))
+    colors = colors[:, 0:3]
+    print('RGB color:', colors)
+    
+    
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+    pcd.colors = o3d.utility.Vector3dVector(colors/255)
+    pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+    vis.add_geometry(pcd)
+    view_pcd = vis.get_view_control()
+    #view_pcd.set_front((0.1, 0.8, 1.3))
+    view_pcd.set_front((-0.15, 1.3, 2.2))
+    view_pcd.set_up((0, 1, 0))
+    view_pcd.set_zoom(0.45)
+    
+    #view_pcd.change_field_of_view(step = fov_step)
+    vis.run()
+    vis.destroy_window() 
+        
+    
+    
+def save_point_cloud():
+    global rgb
+    global pcd
+    global depth_map
+    #global colors
+    
 
+    
+
+    
+    
 def point_cloud3():
     global depth_map
     global fx, fy, cx, cy
@@ -407,11 +510,12 @@ def target3():
     threading.Thread(target=lambda:camera_intrinsic(camera_bin)).start()
 def target4():
     threading.Thread(target=point_cloud).start()
+    #threading.Thread(target=point_cloud2).start()
     #threading.Thread(target=convert_depth_pixel_to_point).start()
 def target5():
     
     threading.Thread(target=ply_cloud).start()
-    #threading.Thread(target=dep_to_ply).start()
+    #threading.Thread(target=save_point_cloud).start()
     
 
 B1 = Button(tk, text = "Choose Color Image", padx=20, pady=15, command=target1, relief="solid")
