@@ -204,9 +204,6 @@ def point_cloud():
     
 
     depthz = depth_map
-    rgb3 = np.asarray(rgb)
-    #rgb3 = np.asarray(rgb)
-    #points = []
     colors = []
 
 # This function predefines the formula and computes the pixels faster due to pre processing
@@ -222,26 +219,17 @@ def point_cloud():
     v = v.transpose(1, 0)
     #color.append(rgb.getpixel((u, v)))
     
-    for i in np.arange(height):
-        for j in np.arange(width):
-            colors.append(rgb.getpixel((j, i)))
-            
+    #wid, hei = rgb.size
+    colors = list(img4.getdata())
+    #print('Pixel val:' ,len(pixel_values))
 
-    #colors = np.hstack((rgb3))
-    
-
-    #cox = colors[1:8 ,0:1]
-    #coy = colors[: ,1:2]
-    #coz = colors[: ,2:3]
-    
-    #print('RGB color:', cox)
-    print(u)
     x = (u - centeru) * depthz / fx
     y = (v - centerv) * depthz / fy
     z = depthz
+    #z =  depthz / depthz.max() * x.max()
     #u = np.int
-    print(u)
-    print(v)
+    #print(u)
+    #print(v)
     
     
     #colors = colors[0:3]
@@ -249,6 +237,8 @@ def point_cloud():
     x = np.reshape(x, (width * height, 1)).astype(float)
     y = np.reshape(y, (width * height, 1)).astype(float)
     z = np.reshape(z, (width * height, 1)).astype(float)
+    #colors = np.reshape(colors, (width * height, 1)).astype(float)
+    #colors = np.array(colors).reshape((width, height, 3))
     #colors = np.reshape(colors, (width * height, 1)).astype(np.float)
     points = np.concatenate((x, y, z), axis=1)
     points =  np.asarray(points)
@@ -285,6 +275,7 @@ def ply_cloud():
     #cameras = camera_bin2
     im1 = images[13]
     print(im1.qvec)
+    print(im1.tvec)
     #print(im1)
     #cam1 = cameras[1]
     #print(cam1)
@@ -317,7 +308,7 @@ def ply_cloud():
     CY0 = colyy.flatten()
     CZ0 = colyz.flatten()
 
-    print(colyx)
+    #print(colyx)
     #print(coly.shape)
     #print(points.shape)
     pointyx = points7[:, 0:1]
@@ -331,10 +322,10 @@ def ply_cloud():
     Y = Y0
     Z = Z0
     #X = ((str(pointyx[0]).lstrip('[').rstrip(']')))
-    print('B4',pointyx)
-    print('Aff',X)
+    #print('B4',pointyx)
+    #print('Aff',X)
     sizex = len(X)
-    print(sizex)
+    #print(sizex)
     #sizey = len(Y)
     #sizez = len(Z)
     #print('Size of X', sizex)
@@ -370,7 +361,7 @@ def ply_cloud():
     #print('Point3', points.shape)
     #print(points2)
     #print(points3)
-    print(colors)
+    #print(colors)
     pcd = o3d.geometry.PointCloud()
 
     pcd.points = o3d.utility.Vector3dVector(points)
@@ -472,6 +463,7 @@ def point_cloud3():
     y = np.where(valid, z * (r - cy) / fy, 0)
     #points.append((x, y, z))
     pcd3 = np.dstack((x, y, z))
+    print(pcd3)
     #points = np.asarray(points)
     #plt.figure()
     #plt.imshow(pcd3)
