@@ -180,7 +180,7 @@ def updateValue(event):
     if sd >= 1:
         depth = sd/50
         #depth = sd/0.01
-        print("Maipulated Depth:", depth)
+        print("Manipulated Depth:", depth)
         return depth
     else:
         depth = 0
